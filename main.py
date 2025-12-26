@@ -1,4 +1,5 @@
 from docker_manager import *
+from vm_manager import *
 import os
 
 def menu():
@@ -13,6 +14,9 @@ def menu():
     print("7. Run Docker Image (create container)")
     print("8. Create Dockerfile")
     print("9. Build Docker Image")
+    print("10. Create Virtual Machine (QEMU)")
+    print("11. Delete Virtual Machine (QEMU)")
+    print("12. List Virtual Machines (QEMU)")
     print("0. Exit")
 
 while True:
@@ -39,6 +43,13 @@ while True:
         create_dockerfile()
     elif choice == "9":
         build_image()
+    elif choice == "10":
+        create_vm()
+    elif choice == "11":
+        delete_vm()
+    elif choice == "12":
+        list_vms()
+        delete_vm()
     elif choice == "0":
         print("Exiting...")
         break
