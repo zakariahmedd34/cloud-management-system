@@ -1,51 +1,74 @@
-# ☁️ Cloud Management System
+## ⚙️ Implementation Details
 
-A command-line based **Cloud Management System** developed as part of the *Cloud Computing and Networking* course.  
-The project provides a unified interface to manage **Docker containers and images** as well as **QEMU virtual machines**, demonstrating core virtualization and cloud infrastructure concepts.
-
----
-
-## 📌 Project Overview
-
-This system allows users to perform common cloud management tasks through a **menu-driven CLI**, including:
-- Docker image and container management
-- Dockerfile creation and image building
-- Basic virtual machine management using QEMU
-
-The project focuses on **practical understanding** rather than graphical interfaces, aligning with industry-standard cloud tools.
+This section explains how Docker and Virtual Machine operations are implemented internally.
 
 ---
 
-## 🐳 Docker Features
+## 🐳 Docker Implementation
 
-- List Docker images
-- List running Docker containers
-- List all containers (running + stopped)
-- Stop a running container
-- Search for Docker images on DockerHub
-- Pull Docker images from DockerHub
-- Run Docker images and create containers
-- Create Dockerfiles using a configurable template
-- Build Docker images from Dockerfiles
+Docker functionality is implemented using Python’s `subprocess` module to interact directly with the **Docker CLI**.  
+The system acts as a **CLI orchestrator**, while Docker performs the actual containerization.
+
+### Docker Engine Check
+Before executing most Docker commands, the system verifies that the Docker daemon is running:
+
+- Uses `docker info`
+- Prevents crashes if Docker is not installed or not started
+- Displays a clear error message instead of failing silently
+
+### Supported Docker Operations
+
+- **List Images**
+  - Executes `docker images`
+- **List Running Containers**
+  - Executes `docker ps`
+- **List All Containers**
+  - Executes `docker ps -a`
+- **Run Image**
+  - Executes `docker run -d`
+  - Supports optional container naming
+  - Relies on Docker’s default behavior to pull the image if it does not exist locally
+- **Stop Container**
+  - Executes `docker stop`
+  - Validates container existence before stopping
+- **Start Container**
+  - Executes `docker start`
+  - Confirms container ID or name exists
+- **Search Docker Hub**
+  - Executes `docker search`
+  - Does not require the Docker daemon to be running
+- **Pull Image**
+  - Executes `docker pull`
+  - Displays Docker output or error messages
+- **Search Local Images**
+  - Filters results from `docker images`
+- **Create Dockerfile**
+  - Supports three modes:
+    1. Guided prompts
+    2. Manual multi-line input
+    3. Load from existing file
+- **Build Image**
+  - Executes `docker build`
+  - Allows custom Dockerfile paths and image tags
+
+### Design Notes
+- All Docker calls are wrapped with error handling
+- User inputs are validated before execution
+- No force operations are used to ensure safety
 
 ---
 
-## 🖥️ QEMU Virtual Machine Features
+## 🖥️ Virtual Machine (QEMU) Implementation
 
-- Create virtual machines using QEMU
-  - Configure CPU, RAM, and disk size
-- Automatically generate QCOW2 disk images
-- List all available virtual machines
-- Delete virtual machines safely
-- Verify VM existence through disk image detection
+Virtual machine functionality is implemented using **QEMU** through system commands executed from Python.
 
-> Virtual machines are represented as **QCOW2 disk image files**, and system resources are consumed only while the VM is running.
+### VM Creation Flow
 
----
-
-## 🛠️ Technologies Used
-
-- **Python 3**
-- **Docker & Docker CLI**
-- **QEMU**
-- **Git & GitHub**
+1. User provides:
+   - VM name
+   - RAM size
+   - CPU count
+   - Disk size
+2. A virtual disk image is created using:
+   ```bash
+   qemu-img create -f qcow2 <name>.qcow2 <size>
