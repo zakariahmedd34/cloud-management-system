@@ -1,5 +1,10 @@
 ## ⚙️ Implementation Details
 
+### Recent Updates
+
+- Docker module docstrings were converted to `#` comments for consistent comment style.
+- Test method names were updated to camelCase (keeping the `test` prefix for `unittest` discovery).
+
 This section explains how Docker and Virtual Machine operations are implemented internally.
 
 ---
@@ -73,3 +78,17 @@ Virtual machine functionality is implemented using **QEMU** through system comma
 2. A virtual disk image is created using:
    ```bash
    qemu-img create -f qcow2 <name>.qcow2 <size>
+   ```
+3. The VM is started using:
+   ```bash
+   qemu-system-x86_64 -m <ram> -smp <cpu> -hda <name>.qcow2
+   ```
+
+### Additional VM Operations
+
+- **List VMs**
+  - Lists local `*.qcow2` files in the current working directory
+- **Delete VM**
+  - Deletes `<name>.qcow2` after confirmation
+- **Create VM from JSON Config**
+  - Reads `name`, `ram`, `cpu`, `disk` from a JSON file (example: `configs/vm_config.json`)
