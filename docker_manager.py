@@ -5,6 +5,7 @@ import shlex
 ERROR_MSG = "Docker Engine is not running. Please start Docker."
 
 def check_docker_running():
+    """Return True if Docker daemon is reachable on this host."""
     try:
         subprocess.run(
             ["docker", "info"],
@@ -17,25 +18,29 @@ def check_docker_running():
         return False
     
 def list_images():
+    """List available Docker images (prints output)."""
     if not check_docker_running():
         print(ERROR_MSG)
         return
-    subprocess.run(["docker", "images"])
+    subprocess.run(["docker", "images"]) 
 
 
 def list_running_containers():
+    """List running Docker containers (prints output)."""
     if not check_docker_running():
         print(ERROR_MSG)
         return
-    subprocess.run(["docker", "ps"])
+    subprocess.run(["docker", "ps"]) 
 
 def list_all_containers():
+    """List all Docker containers (running and stopped)."""
     if not check_docker_running():
         print(ERROR_MSG)
         return
-    subprocess.run(["docker", "ps","-a"])
+    subprocess.run(["docker", "ps","-a"]) 
 
 def run_image():
+    """Run an image in detached mode; prompts for image and optional container name."""
     if not check_docker_running():
         print(ERROR_MSG)
         return
@@ -62,6 +67,7 @@ def run_image():
     except FileNotFoundError:
         print("Docker CLI not found. Please install Docker.")
 def stop_container():
+    """Stop a running container given its ID or name."""
     if not check_docker_running():
         print(ERROR_MSG)
         return
@@ -80,6 +86,7 @@ def stop_container():
 
 
 def search_dockerhub():
+    """Search Docker Hub for images (prints search results)."""
     # `docker search` doesn't require the daemon to be running, so skip the daemon check.
     name = input("Enter image name to search on DockerHub: ").strip()
     if not name:
@@ -90,6 +97,7 @@ def search_dockerhub():
 
 
 def pull_image():
+    """Pull an image from Docker Hub by name:tag."""
     if not check_docker_running():
         print(ERROR_MSG)
         return
@@ -108,6 +116,7 @@ def pull_image():
 
 
 def create_dockerfile():
+    """Create a Dockerfile using guided prompts, pasted content, or loading from a file."""
     path = input("Enter path to save Dockerfile (default: ./Dockerfile): ").strip()
     if not path:
         path = "Dockerfile"
@@ -182,6 +191,7 @@ def create_dockerfile():
 
 
 def search_local_images():
+    """Search for local images matching a name or tag and display results."""
     if not check_docker_running():
         print(ERROR_MSG)
         return
@@ -209,6 +219,7 @@ def search_local_images():
 
 
 def build_image():
+    """Build a Docker image from a Dockerfile and tag it."""
     if not check_docker_running():
         print(ERROR_MSG)
         return
@@ -243,6 +254,7 @@ def build_image():
 
 
 def start_container():
+    """Start a stopped container by ID or name (prints result)."""
     if not check_docker_running():
         print(ERROR_MSG)
         return
@@ -273,7 +285,7 @@ def start_container():
         if result.returncode == 0:
             print(result.stdout.strip())
         else:
-            print("failed to start containers:", cid)
+            print("Failed to start container:", cid)
             print(result.stderr.strip())
     except FileNotFoundError:
         print("Docker CLI not found. Please install Docker.")
