@@ -3,20 +3,28 @@ from vm_manager import *
 import os
 
 def menu():
-    print("\n=== Cloud Management System (Docker) ===")
+    print("\n=== Cloud Management System ===")
     print("c. Clear Screen")
+
+    print("\n--- Docker ---")
     print("1. List Docker Images")
-    print("2. List Running Containers")
-    print("3. List All Containers (running + stopped)")
-    print("4. Stop Container")
-    print("5. Search Image on DockerHub")
-    print("6. Pull Docker Image")
+    print("2. Search Local Images")
+    print("3. Search Image on DockerHub")
+    print("4. Pull Docker Image")
+    print("5. Create Dockerfile")
+    print("6. Build Docker Image")
     print("7. Run Docker Image (create container)")
-    print("8. Create Dockerfile")
-    print("9. Build Docker Image")
-    print("10. Create Virtual Machine (QEMU)")
-    print("11. Delete Virtual Machine (QEMU)")
-    print("12. List Virtual Machines (QEMU)")
+    print("8. List Running Containers")
+    print("9. List All Containers (running + stopped)")
+    print("10. Start Container")
+    print("11. Stop Container")
+
+    print("\n--- Virtual Machines (QEMU) ---")
+    print("12. Create Virtual Machine (interactive)")
+    print("13. Create VM from JSON config")
+    print("14. List Virtual Machines (QEMU)")
+    print("15. Delete Virtual Machine (QEMU)")
+
     print("0. Exit")
 
 while True:
@@ -26,29 +34,34 @@ while True:
     if choice == "1":
         list_images()
     elif choice == "2":
-        list_running_containers()
+        search_local_images()
     elif choice == "3":
-        list_all_containers()
-    elif choice == "4":
-        stop_container()
-    elif choice == "5":
         search_dockerhub()
-    elif choice == "6":
+    elif choice == "4":
         pull_image()
-    elif choice == "c":
-        os.system("cls")
+    elif choice == "5":
+        create_dockerfile()
+    elif choice == "6":
+        build_image()
     elif choice == "7":
         run_image()
     elif choice == "8":
-        create_dockerfile()
+        list_running_containers()
     elif choice == "9":
-        build_image()
+        list_all_containers()
     elif choice == "10":
-        create_vm()
+        start_container()
     elif choice == "11":
-        delete_vm()
+        stop_container()
+    elif choice == "c":
+        os.system("cls")
     elif choice == "12":
+        create_vm()
+    elif choice == "13":
+        create_vm_from_config()
+    elif choice == "14":
         list_vms()
+    elif choice == "15":
         delete_vm()
     elif choice == "0":
         print("Exiting...")

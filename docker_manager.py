@@ -1,5 +1,6 @@
 import subprocess
 import os
+import shlex
 
 ERROR_MSG = "Docker Engine is not running. Please start Docker."
 
@@ -51,7 +52,15 @@ def run_image():
         cmd += ["--name", name]
 
     cmd.append(image)
-    subprocess.run(cmd)
+    try:
+        result = subprocess.run(cmd, check=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        if result.returncode == 0:
+            print(result.stdout.strip())
+        else:
+            print("Failed to run image:")
+            print(result.stderr.strip())
+    except FileNotFoundError:
+        print("Docker CLI not found. Please install Docker.")
 def stop_container():
     if not check_docker_running():
         print(ERROR_MSG)
@@ -59,15 +68,23 @@ def stop_container():
 
     list_running_containers()
     cid = input("Enter container ID or name to stop: ").strip()
-    subprocess.run(["docker", "stop", cid])
+    try:
+        result = subprocess.run(["docker", "stop", cid], check=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        if result.returncode == 0:
+            print(result.stdout.strip())
+        else:
+            print("Failed to stop container:")
+            print(result.stderr.strip())
+    except FileNotFoundError:
+        print("Docker CLI not found. Please install Docker.")
 
 
 def search_dockerhub():
-    if not check_docker_running():
-        print(ERROR_MSG)
-        return
-
+    # `docker search` doesn't require the daemon to be running, so skip the daemon check.
     name = input("Enter image name to search on DockerHub: ").strip()
+    if not name:
+        print("Image name cannot be empty.")
+        return
     subprocess.run(["docker", "search", name])
 
 
@@ -78,7 +95,15 @@ def pull_image():
         return
 
     name = input("Enter image name to pull: ").strip()
-    subprocess.run(["docker", "pull", name])
+    try:
+        result = subprocess.run(["docker", "pull", name], check=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        if result.returncode == 0:
+            print(result.stdout)
+        else:
+            print("Failed to pull image:")
+            print(result.stderr)
+    except FileNotFoundError:
+        print("Docker CLI not found. Please install Docker.")
 
 
 
@@ -93,23 +118,58 @@ def create_dockerfile():
             print("Operation cancelled.")
             return
 
-    base_image = input("Enter base image (default: python:3.12-slim): ").strip()
-    if not base_image:
-        base_image = "python:3.12-slim"
+    print("Choose Dockerfile input mode:")
+    print("1. Guided prompts (base image + start command)")
+    print("2. Paste full multi-line Dockerfile (end with a single line containing a dot '.')")
+    print("3. Load from existing file path")
+    mode = input("Mode [1/2/3] (default 1): ").strip() or "1"
 
-    start_cmd = input("Enter start command (default: python app.py): ").strip()
-    if not start_cmd:
-        start_cmd = "python app.py"
+    dockerfile_content = ""
 
-    # split command safely
-    cmd_parts = start_cmd.split()
+    if mode == "3":
+        src = input("Enter source file path to load Dockerfile from: ").strip()
+        if not src or not os.path.exists(src):
+            print("Source file not found.")
+            return
+        with open(src, "r") as f:
+            dockerfile_content = f.read()
 
-    dockerfile_content = (
-        f"FROM {base_image}\n"
-        f"WORKDIR /app\n"
-        f"COPY . .\n"
-        f'CMD ["{cmd_parts[0]}", "{cmd_parts[1]}"]\n'
-    )
+    elif mode == "2":
+        print("Paste your Dockerfile contents. End with a single '.' on its own line.")
+        lines = []
+        while True:
+            try:
+                line = input()
+            except EOFError:
+                break
+            if line.strip() == ".":
+                break
+            lines.append(line)
+        dockerfile_content = "\n".join(lines) + "\n"
+
+    else:
+        base_image = input("Enter base image (default: python:3.12-slim): ").strip()
+        if not base_image:
+            base_image = "python:3.12-slim"
+
+        start_cmd = input("Enter start command (default: python app.py): ").strip()
+        if not start_cmd:
+            start_cmd = "python app.py"
+
+        # split command safely
+        try:
+            cmd_parts = shlex.split(start_cmd)
+        except Exception:
+            cmd_parts = start_cmd.split()
+
+        cmd_array = ", ".join([f'"{p}"' for p in cmd_parts])
+
+        dockerfile_content = (
+            f"FROM {base_image}\n"
+            f"WORKDIR /app\n"
+            f"COPY . .\n"
+            f"CMD [{cmd_array}]\n"
+        )
 
     directory = os.path.dirname(path)
     if directory and not os.path.exists(directory):
@@ -119,6 +179,32 @@ def create_dockerfile():
         f.write(dockerfile_content)
 
     print(f"Dockerfile created successfully at {path}")
+
+
+def search_local_images():
+    if not check_docker_running():
+        print(ERROR_MSG)
+        return
+
+    name = input("Enter image name or tag to search locally: ").strip()
+    # Use docker images with a simple filter and print matching lines
+    result = subprocess.run(["docker", "images"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    if result.returncode != 0:
+        print("Failed to list local images:")
+        print(result.stderr)
+        return
+
+    lines = result.stdout.splitlines()
+    header = lines[0] if lines else ""
+    matches = [l for l in lines if name.lower() in l.lower()]
+
+    if not matches:
+        print("No local images found matching:", name)
+        return
+
+    print(header)
+    for m in matches:
+        print(m)
 
 
 
@@ -140,9 +226,54 @@ def build_image():
         print("Image name cannot be empty.")
         return
 
-    subprocess.run([
-        "docker", "build",
-        "-t", image_name,
-        "-f", dockerfile_path,
-        "."
-    ])
+    try:
+        result = subprocess.run([
+            "docker", "build",
+            "-t", image_name,
+            "-f", dockerfile_path,
+            "."
+        ], check=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        if result.returncode == 0:
+            print(result.stdout)
+        else:
+            print("Failed to build image:")
+            print(result.stderr)
+    except FileNotFoundError:
+        print("Docker CLI not found. Please install Docker.")
+
+
+def start_container():
+    if not check_docker_running():
+        print(ERROR_MSG)
+        return
+
+    # Show all containers so user can pick one to start
+    subprocess.run(["docker", "ps", "-a"])
+    cid = input("Enter container ID or name to start: ").strip()
+    if not cid:
+        print("Container ID/name cannot be empty.")
+        return
+
+    # validate container exists
+    try:
+        ps = subprocess.run(["docker", "ps", "-a", "--format", "{{.ID}}\t{{.Names}}"], check=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        entries = [line.split("\t") for line in ps.stdout.splitlines() if line.strip()]
+        ids = {e[0] for e in entries}
+        names = {e[1] for e in entries}
+    except Exception:
+        ids = set()
+        names = set()
+
+    if cid not in ids and cid not in names:
+        print(f"No such container: {cid}")
+        return
+
+    try:
+        result = subprocess.run(["docker", "start", cid], check=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        if result.returncode == 0:
+            print(result.stdout.strip())
+        else:
+            print("failed to start containers:", cid)
+            print(result.stderr.strip())
+    except FileNotFoundError:
+        print("Docker CLI not found. Please install Docker.")
