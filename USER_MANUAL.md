@@ -131,5 +131,3 @@ Option 14 → See your new VM
 | c | Clear screen |
 
 ---
-
-**Need help?** Check PROJECT_REPORT.md for technical details.
