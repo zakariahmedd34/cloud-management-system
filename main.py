@@ -3,7 +3,7 @@ from vm_manager import *
 import os
 
 def menu():
-    print("\n=== Cloud Management System (Docker) ===")
+    print("\n=== Cloud Management System ===")
     print("c. Clear Screen")
     print("1. List Docker Images")
     print("2. List Running Containers")
@@ -49,7 +49,6 @@ while True:
         delete_vm()
     elif choice == "12":
         list_vms()
-        delete_vm()
     elif choice == "0":
         print("Exiting...")
         break
