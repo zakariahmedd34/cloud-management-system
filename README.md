@@ -16,6 +16,7 @@ Before executing most Docker commands, the system verifies that the Docker daemo
 - Prevents crashes if Docker is not installed or not started
 - Displays a clear error message instead of failing silently
 
+
 ### Supported Docker Operations
 
 - **List Images**
