@@ -7,31 +7,31 @@ import docker_manager
 
 
 class TestDockerManagerBasic(unittest.TestCase):
-
+    # Simple tests for docker_manager functions
 
     def testCheckDockerRunningWhenAvailable(self):
-
+        # Test: check_docker_running returns True when Docker is available
         with patch('docker_manager.subprocess.run') as mock_run:
             mock_run.return_value = MagicMock(returncode=0)
             result = docker_manager.check_docker_running()
             self.assertTrue(result)
 
     def testCheckDockerRunningWhenUnavailable(self):
-
+        # Test: check_docker_running returns False when Docker is unavailable
         with patch('docker_manager.subprocess.run') as mock_run:
             mock_run.side_effect = FileNotFoundError()
             result = docker_manager.check_docker_running()
             self.assertFalse(result)
 
     def testListImagesCallsDocker(self):
-
+        # Test: list_images calls docker images command
         with patch('docker_manager.subprocess.run') as mock_run:
             with patch.object(docker_manager, 'check_docker_running', return_value=True):
                 docker_manager.list_images()
                 mock_run.assert_called_once_with(["docker", "images"])
 
     def testListRunningContainersCallsDocker(self):
-
+        # Test: list_running_containers calls docker ps command
         with patch('docker_manager.subprocess.run') as mock_run:
             with patch.object(docker_manager, 'check_docker_running', return_value=True):
                 docker_manager.list_running_containers()
